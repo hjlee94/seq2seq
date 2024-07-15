@@ -72,6 +72,8 @@ class AttentionDecoder(nn.Module):
 
         self._attention = Attention()
 
+        self._dropout = nn.Dropout(p=0.1)
+
         self._fc1 = nn.Linear(
             in_features=hidden_size * 2,
             out_features=vocab_size)
@@ -89,6 +91,8 @@ class AttentionDecoder(nn.Module):
             context_vector = self._attention(out, enc_out)
 
             out = torch.cat((context_vector, out.squeeze(1)), dim=1)
+
+            out = self._dropout(out)
 
             out = self._fc1(out) # (N, 256) -> (N, VOCAB_SIZE)
             res.append(out.unsqueeze(1))

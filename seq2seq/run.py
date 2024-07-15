@@ -1,4 +1,4 @@
-from data import DatasetHandler, SimpleTokenizer, SOS, EOS, SequenceDataset
+from data import SimpleTokenizer, SOS, EOS
 from model import Seq2Seq, PeekySeq2Seq, AttentionSeq2Seq
 # from model.test import Seq2Seq
 
@@ -56,6 +56,6 @@ def run(token_path, model_path):
 
 
 if __name__ == '__main__':
-    run(token_path="./rsrc/tokenizer.pkl", model_path="./rsrc/seq2seq-attention.pt")
+    run(token_path="./rsrc/tokenizer.pkl", model_path="./rsrc/model.pt")
 
     

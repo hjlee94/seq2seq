@@ -2,6 +2,7 @@ from typing import List, Callable
 import re
 import pickle
 import torch
+import os
 
 from torch.nn.utils.rnn import pad_sequence
 
@@ -41,6 +42,9 @@ class BaseTokenizer(Serializable):
         return self.get(PAD)
 
     def dump(self, path:str) -> None:
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(os.path.dirname(path))
+
         with open(path, 'wb') as fd:
             pickle.dump(self, fd)
 
@@ -107,6 +111,21 @@ class SimpleTokenizer(BaseTokenizer):
 
         return token_list
 
+class CharacterTokenizer(BaseTokenizer):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def tokenize(self, sentence:str) -> List[str]:
+        sentence = sentence.lower()
+
+        token_list = list(sentence)
+        token_list = list(filter(lambda x:x, token_list))
+
+        for token in token_list:
+            self.add(token)
+
+        return token_list
+
 class SequenceDataset(Serializable):
     def __init__(self) -> None:
         self._src = []
@@ -134,7 +153,7 @@ class DatasetHandler:
         self.dataset = SequenceDataset()
 
     def parse_txt(self, path:str, filter_func:Callable[[str, str], bool]=None):
-        with open(path) as fd:
+        with open(path, encoding='utf-8') as fd:
 
             for line in fd:
                 if not line:
@@ -163,11 +182,21 @@ class DatasetHandler:
 
 if __name__ == '__main__':
     tokenizer = SimpleTokenizer()
+    # tokenizer = PatternTokenizer()
+    # tokenizer = CharacterTokenizer()
     handler = DatasetHandler(tokenizer=tokenizer)
+    # handler.parse_txt(
+    #     "./dataset/eng-fra.txt", 
+    #     filter_func=lambda src, dst:len(src) > 15,
+    #     )
     handler.parse_txt(
-        "./dataset/eng-fra.txt", 
-        filter_func=lambda src, dst:len(src) > 15
+        "./dataset/dialogs.txt", 
+        None
         )
+    # handler.parse_txt(
+    #     "./dataset/num.txt", 
+    #     None
+    #     )
 
     handler.tokenizer.dump("./rsrc/tokenizer.pkl")
     handler.dataset.dump("./rsrc/dataset.pkl")

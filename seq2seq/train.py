@@ -1,4 +1,4 @@
-from data import DatasetHandler, SimpleTokenizer, SequenceDataset
+from data import DatasetHandler, SimpleTokenizer, PatternTokenizer, CharacterTokenizer, SequenceDataset
 from model import Seq2Seq, PeekySeq2Seq, AttentionSeq2Seq
 
 from sklearn.model_selection import train_test_split
@@ -7,6 +7,16 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 import time
 import os
+import json
+import random
+import numpy as np
+
+seed = 0
+
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
 
 class TorchDataset(Dataset):
     def __init__(self, X, y):
@@ -33,6 +43,10 @@ class Trainer:
 
     def init_history(self):
         self.history = []
+
+    def dump_history(self, path):
+        with open(path, 'w') as fd:
+            json.dump(self.history, fd)
 
     def set_model(self, model):
         self._model = model
@@ -96,9 +110,10 @@ class Trainer:
             print(f"[epoch: {e:02d}] loss:{epoch_loss:.4f} eval:{eval_loss:.4f} time:{elapsed_time:.3f}s")
 
             self.history.append({
-                'loss':loss,
-                'eval':eval_loss,
-                'time': elapsed_time
+                'epoch':int(e),
+                'loss': float(loss),
+                'eval': float(eval_loss),
+                'time': float(elapsed_time)
             })
 
     def _evaluate(self, test_dl):
@@ -160,6 +175,8 @@ if __name__ == '__main__':
 
     ds = SequenceDataset.from_pickle("./rsrc/dataset.pkl")
     tokenizer = SimpleTokenizer.from_pickle("./rsrc/tokenizer.pkl")
+    # tokenizer = PatternTokenizer.from_pickle("./rsrc/tokenizer.pkl")
+    # tokenizer = CharacterTokenizer.from_pickle("./rsrc/tokenizer.pkl")
     X, y = ds.get_xy()
 
     model = AttentionSeq2Seq(
@@ -192,5 +209,6 @@ if __name__ == '__main__':
     trainer.lr = 1e-3
 
     trainer.train_model(X, y)
-    trainer.checkpoint("./rsrc/seq2seq-attention.pt")
+    trainer.checkpoint("./rsrc/model.pt")
+    trainer.dump_history("./rsrc/history.json")
     

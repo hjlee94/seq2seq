@@ -72,6 +72,8 @@ class Decoder(nn.Module):
             dropout=0.1,
         )
 
+        self._dropout = nn.Dropout(p=0.1)
+
         self._fc1 = nn.Linear(
             in_features=hidden_size,
             out_features=vocab_size)
@@ -88,6 +90,8 @@ class Decoder(nn.Module):
 
             out, hs = self._rnn(out, context) # (N, 1, D*H=256)
             out = out.squeeze(1) # (N, 256)
+
+            out = self._dropout(out)
 
             out = self._fc1(out) # (N, 256) -> (N, VOCAB_SIZE)
 
